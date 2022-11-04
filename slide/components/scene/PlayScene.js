@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { gsap } from 'gsap'
 import shake from 'shake.js'
 import useGameController from '../../store/gameController'
+import * as Tone from 'tone'
 
 const GameGrid = ({ col, row, rowNum, colNum, isActive, children }) => {
   const haveRBorder = col % rowNum != rowNum - 1
@@ -27,7 +28,7 @@ const PlayScene = () => {
   const rowNum = 6
   const defalutActiveCell = [false, false, false, false, false]
   const [activeCell, setActiveCell] = useState(defalutActiveCell)
-  const [counter, setCounter] = useState(10)
+  const [counter, setCounter] = useState(20)
 
   const addScore = useGameController.getState().addScore
   const score = useGameController((state) => state.score)
@@ -49,23 +50,17 @@ const PlayScene = () => {
     setActiveCell([..._activeCell])
   }
 
-  const generateSound = ({ frequency = 440, type = 'sine' }) => {
-    var context = new (window.AudioContext || window.webkitAudioContext)()
-    var osc = context.createOscillator() // instantiate an oscillator
-    osc.type = type // this is the default - also square, sawtooth, triangle
-    osc.frequency.value = frequency // Hz
-    osc.connect(context.destination) // connect it to the destination
-    osc.start() // start the oscillator
-    osc.stop(context.currentTime + 0.1) // stop 2 seconds after the current time
+  const synth = new Tone.Synth().toDestination()
+  const generateSound = ({ note = 'C4', type = 'sine' }) => {
+    synth.triggerAttackRelease(note, '8n')
   }
 
   const clickOnCell = (col) => {
     if (col === activeCell[rowNum - 1]) {
       // one context per document
-      const frequencyPreset = [261.6, 293.7, 329.6, 392.0, 440.0]
+      const frequencyPreset = ['C4', 'D4', 'E4', 'G4', 'A4']
       generateSound({
-        frequency: frequencyPreset[col],
-        type: 'sine',
+        note: frequencyPreset[col],
       })
       spanwNewRow()
       addScore()
@@ -83,8 +78,7 @@ const PlayScene = () => {
         timeout: 10,
       })
       generateSound({
-        frequency: 155.6,
-        type: 'sawtooth',
+        note: 'C3',
       })
     }
   }
